@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export NVM_DIR="/root/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+export PATH="/root/.nvm/versions/node/v22.23.3/bin:/usr/local/bin:/usr/bin:$PATH"
 APP_DIR="${APP_DIR:-/var/www/api.alterera.net}"
 PM2_CONFIG="${PM2_CONFIG:-deploy/pm2/ecosystem.config.cjs}"
 PM2_APP_NAME="${PM2_APP_NAME:-alterera-api}"
