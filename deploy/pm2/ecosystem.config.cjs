@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'alterera-api',
-      script: 'dist/main.js',
+      script: 'dist/src/main.js',
       cwd: '/var/www/api.alterera.net',
       instances: 2,
       exec_mode: 'cluster',
@@ -12,7 +12,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
       },
-      env_file: '/etc/alterera/api.env',
+      env_file: '/var/www/api.alterera.net/.env',
     },
   ],
 };
