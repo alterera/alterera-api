@@ -30,4 +30,7 @@ npm run start:dev
 
 ## Deployment
 
-See [deploy/scripts/register-meta-webhook.md](deploy/scripts/register-meta-webhook.md) and [deploy/scripts/deploy.sh](deploy/scripts/deploy.sh).
+- **GitHub Actions (production):** push to `main` deploys to the VPS automatically.
+- **Setup guide:** [deploy/scripts/github-actions-setup.md](deploy/scripts/github-actions-setup.md)
+- **Meta webhook:** [deploy/scripts/register-meta-webhook.md](deploy/scripts/register-meta-webhook.md)
+- **Manual deploy on VPS:** `bash deploy/scripts/deploy.sh`
