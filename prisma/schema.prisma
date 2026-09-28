@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AUTH / USERS ───────────────────────────────────────
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  isActive      Boolean        @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  roles         UserRole[]
+  auditLogs     AuditLog[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  permissions String[]
+  users       UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  resource  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ─── WHATSAPP ───────────────────────────────────────────
+
+model WhatsAppChannelIdentity {
+  id            String                 @id @default(uuid())
+  waId          String                 @unique
+  phoneNumber   String?
+  profileName   String?
+  lastSeenAt    DateTime?
+  metadata      Json?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  messages      WhatsAppMessage[]
+  conversations WhatsAppConversation[]
+
+  @@index([phoneNumber])
+}
+
+model WhatsAppConversation {
+  id                 String                  @id @default(uuid())
+  channelIdentityId  String
+  phoneNumberId      String
+  status             String                  @default("open")
+  lastMessageAt      DateTime?
+  lastMessagePreview String?
+  unreadCount        Int                     @default(0)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  channelIdentity    WhatsAppChannelIdentity @relation(fields: [channelIdentityId], references: [id], onDelete: Restrict)
+  messages           WhatsAppMessage[]
+
+  @@unique([channelIdentityId, phoneNumberId])
+  @@index([lastMessageAt])
+}
+
+model WhatsAppMessage {
+  id                String                       @id @default(uuid())
+  channelIdentityId String
+  conversationId    String?
+  direction         String
+  type              String
+  status            String
+  content           Json
+  metaMessageId     String?                      @unique
+  idempotencyKey    String?                      @unique
+  correlationId     String?
+  errorCode         String?
+  errorMessage      String?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  readAt            DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  channelIdentity   WhatsAppChannelIdentity      @relation(fields: [channelIdentityId], references: [id], onDelete: Restrict)
+  conversation      WhatsAppConversation?        @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  statusEvents      WhatsAppMessageStatusEvent[]
+
+  @@index([channelIdentityId, createdAt])
+  @@index([conversationId, createdAt])
+  @@index([status])
+  @@index([correlationId])
+}
+
+model WhatsAppMessageStatusEvent {
+  id            String          @id @default(uuid())
+  messageId     String
+  status        String
+  metaTimestamp DateTime?
+  rawPayload    Json?
+  createdAt     DateTime        @default(now())
+  message       WhatsAppMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId, createdAt])
+}
+
+model WhatsAppTemplate {
+  id             String    @id @default(uuid())
+  metaTemplateId String?   @unique
+  name           String
+  language       String
+  category       String?
+  status         String?
+  components     Json?
+  lastSyncedAt   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([name, language])
+}
+
+model WebhookEvent {
+  id            String    @id @default(uuid())
+  source        String    @default("meta_whatsapp")
+  eventType     String
+  fingerprint   String    @unique
+  status        String    @default("pending")
+  metaMessageId String?
+  payload       Json?
+  errorMessage  String?
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([metaMessageId])
+}
