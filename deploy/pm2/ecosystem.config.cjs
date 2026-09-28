@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'alterera-api',
-      script: 'dist/main.js',
+      script: 'dist/src/main.js',
       cwd: '/var/www/api.alterera.net',
       instances: 1,
       exec_mode: 'fork',
