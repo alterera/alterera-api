@@ -11,6 +11,18 @@ import {
 } from 'class-validator';
 import { MessageType } from '../domain/enums/message-type.enum.js';
 
+class TemplateParameterDto {
+  @ApiProperty({ example: 'text' })
+  @IsString()
+  @IsNotEmpty()
+  type!: string;
+
+  @ApiPropertyOptional({ example: '123456' })
+  @IsOptional()
+  @IsString()
+  text?: string;
+}
+
 class TemplateComponentDto {
   @ApiProperty()
   @IsString()
@@ -26,10 +38,12 @@ class TemplateComponentDto {
   @IsString()
   index?: string;
 
-  @ApiPropertyOptional({ type: 'array', items: { type: 'object' } })
+  @ApiPropertyOptional({ type: [TemplateParameterDto] })
   @IsOptional()
   @IsArray()
-  parameters?: Array<Record<string, unknown>>;
+  @ValidateNested({ each: true })
+  @Type(() => TemplateParameterDto)
+  parameters?: TemplateParameterDto[];
 }
 
 export class SendMessageDto {
